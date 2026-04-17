@@ -24,7 +24,7 @@
     {{-- ── Search / Filter ────────────────────────────── --}}
     @include('components.search-bar', [
         'action' => route('purchases.index'),
-        'showDates' => true,
+        'showDates' => false,
     ])
 
     {{-- ── Purchases Table ────────────────────────────── --}}
@@ -40,8 +40,6 @@
                         <th>GST %</th>
                         <th>GST Amount (₹)</th>
                         <th>Total (₹)</th>
-                        <th>Date</th>
-                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,8 +52,6 @@
                             <td>{{ $p->gst_percent }}%</td>
                             <td>₹{{ number_format($p->gst_amount, 2) }}</td>
                             <td><strong>₹{{ number_format($p->total_amount, 2) }}</strong></td>
-                            <td>{{ $p->purchase_date->format('d M Y') }}</td>
-                            <td>{{ Str::limit($p->notes, 30) ?? '—' }}</td>
                         </tr>
                     @empty
                         <tr>

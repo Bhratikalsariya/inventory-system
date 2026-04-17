@@ -15,4 +15,13 @@ class Stock extends Model
         'total_sold_qty',
         'current_stock',
     ];
+
+    public function purchaseProducts()
+    {
+        return $this->hasMany(PurchaseProduct::class, 'product_code', 'product_code');
+    }
+    public function sellProducts()
+    {
+        return $this->hasMany(SellProduct::class, 'product_code', 'product_code');
+    }
 }

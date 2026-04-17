@@ -17,7 +17,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Product Code <span class="text-danger">*</span></label>
                             <select name="product_code" id="s_product_code" class="form-select"
-                                    required onchange="checkStock()">
+                                    onchange="checkStock()">
                                 <option value="">Select product...</option>
                                 @foreach($productCodes ?? [] as $code)
                                     <option value="{{ $code }}"
@@ -38,7 +38,6 @@
                             <input type="number" name="quantity" id="s_quantity" class="form-control"
                                    min="1" placeholder="Enter quantity"
                                    value="{{ old('quantity') }}"
-                                   required
                                    oninput="calculateSale()">
                             @error('quantity')
                                 <small class="text-danger">{{ $message }}</small>
@@ -51,7 +50,6 @@
                             <input type="number" name="selling_price" id="s_selling_price" class="form-control"
                                    step="0.01" min="0" placeholder="Enter selling price"
                                    value="{{ old('selling_price') }}"
-                                   required
                                    oninput="calculateSale()">
                             @error('selling_price')
                                 <small class="text-danger">{{ $message }}</small>
@@ -84,21 +82,6 @@
                             <input type="text" id="s_total_amount" class="form-control computed-field"
                                    value="₹ 0.00" readonly
                                    style="font-size:18px; font-weight:800; color:#111827;">
-                        </div>
-
-                        {{-- Sale Date --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Sale Date</label>
-                            <input type="date" name="sale_date" class="form-control"
-                                   value="{{ old('sale_date', date('Y-m-d')) }}">
-                        </div>
-
-                        {{-- Notes --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Notes</label>
-                            <input type="text" name="notes" class="form-control"
-                                   placeholder="Optional notes"
-                                   value="{{ old('notes') }}">
                         </div>
                     </div>
 
@@ -150,7 +133,7 @@
         const code = document.getElementById('s_product_code').value;
         const infoEl = document.getElementById('s_stock_info');
 
-        if (code && stockData[code] !== undefined) {
+        if (code && stockData[code] !== undefined && stockData[code] != 0) {
             infoEl.innerHTML = `<span class="text-success"><i class="bi bi-box-seam"></i> Available stock: <strong>${stockData[code]}</strong></span>`;
         } else if (code) {
             infoEl.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Product not in stock</span>`;
@@ -182,7 +165,7 @@
         const warningText = document.getElementById('s_stock_warning_text');
         const submitBtn = document.getElementById('s_submit_btn');
 
-        if (code && stockData[code] !== undefined && qty > stockData[code]) {
+        if (code && stockData[code] !== undefined && qty >= stockData[code]) {
             warningEl.classList.remove('d-none');
             warningText.textContent = `Insufficient stock! Available: ${stockData[code]}, Requested: ${qty}`;
             submitBtn.disabled = true;

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PurchaseProduct;
+use App\Models\SellProduct;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -9,72 +12,41 @@ class DashboardController extends Controller
     public function index()
     {
         // ── Static Summary Data ──────────────────────
-        $totalPurchases  = 487500.00;
-        $totalSales      = 623800.00;
-        $inventoryValue  = 215400.00;
-        $lowStockCount   = 4;
+        $totalPurchases  = PurchaseProduct::class::sum('total_amount');
+        $totalSales      = SellProduct::class::sum('total_amount');
+        $inventoryValue  = Stock::with('purchaseProducts')->where('current_stock', '>', 0)->get()->map(function ($stock) {
+            return $stock->purchaseProducts->sum('total_amount');
+        })->sum();
 
         // ── Static Low Stock Items ───────────────────
-        $lowStockItems = collect([
-            (object)[
-                'id'            => 1,
-                'product_code'  => 'PRD-005',
-                'current_stock' => 3,
-            ],
-            (object)[
-                'id'            => 2,
-                'product_code'  => 'PRD-012',
-                'current_stock' => 0,
-            ],
-        ]);
+        $lowStockItems = Stock::where('current_stock', '<=', 10)->get();
 
         // ── Static Recent Purchases ──────────────────
-        $recentPurchases = collect([
-            (object)[
-                'id'            => 101,
-                'product_code'  => 'PRD-001',
-                'quantity'      => 50,
-                'rate'          => 250.00,
-                'gst_percent'   => 18,
-                'gst_amount'    => 2250.00,
-                'total_amount'  => 14750.00,
-                'purchase_date' => now()->subDays(1),
-                'notes'         => 'Bulk order',
-            ],
-        ]);
+        $recentPurchases = PurchaseProduct::class::orderBy('updated_at', 'desc')->take(5)->get();
 
         // ── Static Recent Sales ──────────────────────
-        $recentSales = collect([
-            (object)[
-                'id'            => 201,
-                'product_code'  => 'PRD-001',
-                'quantity'      => 10,
-                'selling_price' => 400.00,
-                'gst_percent'   => 18,
-                'gst_amount'    => 720.00,
-                'total_amount'  => 4720.00,
-                'sale_date'     => now()->subDays(1),
-                'notes'         => 'Walk-in customer',
-            ],
-        ]);
+        $recentSales = SellProduct::class::orderBy('updated_at', 'desc')->take(5)->get();
+
+        $lowStockCount   = $recentSales->count() > 0 ? $lowStockItems->count() : 0;
 
         // ── Static Profit Data ───────────────────────
-        $profitData = collect([
-            (object)[
-                'product_code'          => 'PRD-010',
-                'total_purchase_amount' => 36000.00,
-                'total_sale_amount'     => 48000.00,
-                'profit'                => 12000.00,
-                'current_stock'         => 120,
-            ],
-            (object)[
-                'product_code'          => 'PRD-005',
-                'total_purchase_amount' => 22000.00,
-                'total_sale_amount'     => 19500.00,
-                'profit'                => -2500.00,
-                'current_stock'         => 3,
-            ],
-        ]);
+        $profitData = Stock::with('purchaseProducts','sellProducts')->get()->map(function ($stock) {
+            $total_purchase_amount = $stock->purchaseProducts->sum(function ($p) {
+                                                                    return $p->quantity * $p->rate;
+                                                                });
+            $total_sale_amount = $stock->sellProducts->sum(function ($s) {
+                                                            return $s->quantity * $s->selling_price;
+                                                        });
+            $cost_of_sold = $stock->total_sold_qty * ($stock->purchaseProducts->sum(fn($p) => $p->quantity * $p->rate) / max($stock->total_purchased_qty,1));
+
+            return (object)[
+                'product_code' => $stock->product_code,
+                'total_purchase_amount' => $total_purchase_amount,
+                'total_sale_amount' => $total_sale_amount,
+                'profit' => $total_sale_amount - $cost_of_sold,
+                'current_stock' => $stock->current_stock,
+            ];
+        });
 
         return view('dashboard.index', compact(
             'totalPurchases',

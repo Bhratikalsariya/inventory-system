@@ -24,7 +24,7 @@
     {{-- ── Search / Filter ────────────────────────────── --}}
     @include('components.search-bar', [
         'action' => route('sales.index'),
-        'showDates' => true,
+        'showDates' => false,
     ])
 
     {{-- ── Sales Table ────────────────────────────────── --}}
@@ -40,8 +40,6 @@
                         <th>GST %</th>
                         <th>GST Amount (₹)</th>
                         <th>Total (₹)</th>
-                        <th>Date</th>
-                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,8 +52,6 @@
                             <td>{{ $s->gst_percent }}%</td>
                             <td>₹{{ number_format($s->gst_amount, 2) }}</td>
                             <td><strong>₹{{ number_format($s->total_amount, 2) }}</strong></td>
-                            <td>{{ $s->sale_date->format('d M Y') }}</td>
-                            <td>{{ Str::limit($s->notes, 30) ?? '—' }}</td>
                         </tr>
                     @empty
                         <tr>

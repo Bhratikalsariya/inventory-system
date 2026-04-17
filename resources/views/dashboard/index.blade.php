@@ -53,7 +53,6 @@
                                 <th>Product</th>
                                 <th>Qty</th>
                                 <th>Amount</th>
-                                <th>Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -62,7 +61,6 @@
                                     <td><strong>{{ $purchase->product_code }}</strong></td>
                                     <td>{{ $purchase->quantity }}</td>
                                     <td>₹{{ number_format($purchase->total_amount, 2) }}</td>
-                                    <td>{{ $purchase->purchase_date->format('d M Y') }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -91,7 +89,6 @@
                                 <th>Product</th>
                                 <th>Qty</th>
                                 <th>Amount</th>
-                                <th>Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,7 +97,6 @@
                                     <td><strong>{{ $sale->product_code }}</strong></td>
                                     <td>{{ $sale->quantity }}</td>
                                     <td>₹{{ number_format($sale->total_amount, 2) }}</td>
-                                    <td>{{ $sale->sale_date->format('d M Y') }}</td>
                                 </tr>
                             @empty
                                 <tr>

@@ -2,38 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PurchaseProduct as RequestsPurchaseProduct;
+use App\Models\PurchaseProduct;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
         // ── Static Purchase Data ─────────────────────
-        $allPurchases = collect([
-            (object)[
-                'id'            => 101,
-                'product_code'  => 'PRD-001',
-                'quantity'      => 50,
-                'rate'          => 250.00,
-                'gst_percent'   => 18,
-                'gst_amount'    => 2250.00,
-                'total_amount'  => 14750.00,
-                'purchase_date' => now()->subDays(1),
-                'notes'         => 'Bulk order from supplier A',
-            ],
-            (object)[
-                'id'            => 102,
-                'product_code'  => 'PRD-003',
-                'quantity'      => 100,
-                'rate'          => 120.00,
-                'gst_percent'   => 12,
-                'gst_amount'    => 1440.00,
-                'total_amount'  => 13440.00,
-                'purchase_date' => now()->subDays(2),
-                'notes'         => null,
-            ],
-        ]);
+        $allPurchases = PurchaseProduct::all();
+        // $allPurchases = collect([
+        //     (object)[
+        //         'id'            => 101,
+        //         'product_code'  => 'PRD-001',
+        //         'quantity'      => 50,
+        //         'rate'          => 250.00,
+        //         'gst_percent'   => 18,
+        //         'gst_amount'    => 2250.00,
+        //         'total_amount'  => 14750.00,
+        //         'purchase_date' => now()->subDays(1),
+        //         'notes'         => 'Bulk order from supplier A',
+        //     ],
+        //     (object)[
+        //         'id'            => 102,
+        //         'product_code'  => 'PRD-003',
+        //         'quantity'      => 100,
+        //         'rate'          => 120.00,
+        //         'gst_percent'   => 12,
+        //         'gst_amount'    => 1440.00,
+        //         'total_amount'  => 13440.00,
+        //         'purchase_date' => now()->subDays(2),
+        //         'notes'         => null,
+        //     ],
+        // ]);
 
         // ── Simple filter by product_code ────────────
         $filtered = $allPurchases;
@@ -60,11 +65,41 @@ class PurchaseController extends Controller
         return view('purchases.index', compact('purchases'));
     }
 
-    public function store(Request $request)
+    public function store(RequestsPurchaseProduct $request)
     {
-        // No DB — just flash success and redirect
-        return redirect()
-            ->route('purchases.index')
-            ->with('success', 'Purchase recorded successfully! (Demo mode — no database connected)');
+        DB::beginTransaction();
+        try {
+            $gst_amount = ($request->rate * $request->quantity * $request->gst_percent) / 100;
+            $purchaseProduct = PurchaseProduct::create([
+                'product_code' => $request->product_code,
+                'quantity'     => $request->quantity,
+                'rate'         => $request->rate,
+                'gst_percent'  => $request->gst_percent,
+                'gst_amount'   => $gst_amount,
+                'total_amount' => ($request->rate * $request->quantity) + ($gst_amount),
+            ]);
+            $stockData = Stock::where('product_code', $request->product_code)->first();
+            if ($stockData) {
+                $stockData->total_purchased_qty += $request->quantity;
+                $stockData->current_stock += $request->quantity;
+                $stockData->save();
+            } else {
+                Stock::create([
+                    'product_code' => $request->product_code,
+                    'total_purchased_qty'=> $request->quantity,
+                    'total_sold_qty' => 0,
+                    'current_stock' => $request->quantity,
+                ]);
+            }
+            DB::commit();
+            return redirect()
+                ->route('purchases.index')
+                ->with('success', 'Purchase recorded successfully! ');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->route('purchases.index')
+                ->with('error', 'Failed to record purchase: ' . $e->getMessage());
+        }
     }
 }

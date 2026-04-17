@@ -19,7 +19,6 @@
                             <input type="text" name="product_code" class="form-control"
                                    placeholder="e.g. PRD-001"
                                    value="{{ old('product_code') }}"
-                                   required
                                    oninput="this.value = this.value.toUpperCase(); calculatePurchase();">
                             @error('product_code')
                                 <small class="text-danger">{{ $message }}</small>
@@ -32,7 +31,6 @@
                             <input type="number" name="quantity" id="p_quantity" class="form-control"
                                    min="1" placeholder="Enter quantity"
                                    value="{{ old('quantity') }}"
-                                   required
                                    oninput="calculatePurchase()">
                             @error('quantity')
                                 <small class="text-danger">{{ $message }}</small>
@@ -45,7 +43,6 @@
                             <input type="number" name="rate" id="p_rate" class="form-control"
                                    step="0.01" min="0" placeholder="Enter rate"
                                    value="{{ old('rate') }}"
-                                   required
                                    oninput="calculatePurchase()">
                             @error('rate')
                                 <small class="text-danger">{{ $message }}</small>
@@ -78,21 +75,6 @@
                             <input type="text" id="p_total_amount" class="form-control computed-field"
                                    value="₹ 0.00" readonly
                                    style="font-size:18px; font-weight:800; color:#111827;">
-                        </div>
-
-                        {{-- Purchase Date --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Purchase Date</label>
-                            <input type="date" name="purchase_date" class="form-control"
-                                   value="{{ old('purchase_date', date('Y-m-d')) }}">
-                        </div>
-
-                        {{-- Notes --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Notes</label>
-                            <input type="text" name="notes" class="form-control"
-                                   placeholder="Optional notes"
-                                   value="{{ old('notes') }}">
                         </div>
                     </div>
 

@@ -17,4 +17,9 @@ class PurchaseProduct extends Model
         'gst_amount',
         'total_amount',
     ];
+
+    public function stock()
+    {
+        return $this->hasOne(Stock::class, 'product_code', 'product_code');
+    }
 }
